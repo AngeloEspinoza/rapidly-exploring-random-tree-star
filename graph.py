@@ -17,9 +17,10 @@ class Graph():
 		Map width and height in pixels.
 	"""
 
-	def __init__(self, start, goal, map_dimensions, epsilon):
+	def __init__(self, start, goal, map_dimensions, epsilon, radius):
 		self.x_init = start
 		self.x_goal = goal
+		self.robot_radius = radius
 
 		self.WIDTH, self.HEIGHT = map_dimensions
 		self.MAX_NODES = 100
@@ -251,19 +252,19 @@ class Graph():
 
 	def draw_random_node(self, map_):
 		"""Draws the x_rand node."""
-		pygame.draw.circle(surface=map_, color=self.GREEN, center=self.x_rand, radius=3)
+		pygame.draw.circle(surface=map_, color=self.GREEN, center=self.x_rand, radius=self.robot_radius)
 
 	def draw_new_node(self, map_, n):
 		"""Draws the x_near node."""
-		pygame.draw.circle(surface=map_, color=self.BROWN, center=n, radius=2)
+		pygame.draw.circle(surface=map_, color=self.BROWN, center=n, radius=self.robot_radius)
 
 	def draw_initial_node(self, map_):
 		"""Draws the x_init node."""
-		pygame.draw.circle(surface=map_, color=self.BLUE, center=self.x_init, radius=4)
+		pygame.draw.circle(surface=map_, color=self.BLUE, center=self.x_init, radius=self.robot_radius)
 
 	def draw_goal_node(self, map_):
 		"""Draws the x_goal node."""
-		pygame.draw.circle(surface=map_, color=self.RED, center=self.x_goal, radius=4)
+		pygame.draw.circle(surface=map_, color=self.RED, center=self.x_goal, radius=self.robot_radius)
 
 	def draw_local_planner(self, p1, p2, map_):
 		"""Draws the local planner from node to node."""
@@ -277,7 +278,7 @@ class Graph():
 
 	def move_robot(self, position, map_):
 		"""Draws the robot moving at the given position."""
-		pygame.draw.circle(surface=map_, color=(0, 0, 255),	center=position, radius=4)
+		pygame.draw.circle(surface=map_, color=(0, 0, 255),	center=position, radius=self.robot_radius)
 
 	def draw_tree(self, nears, news, map_):
 		"""Draws the tree constantly. Used to display it in an infinite loop."""
