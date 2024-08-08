@@ -2,6 +2,8 @@ import pygame
 import random
 import math
 import numpy as np
+import random
+import queue
 
 class Graph():
 	"""
@@ -50,15 +52,15 @@ class Graph():
 		----------
 		point : tuple
 			Point to be checked.
-		obstacles : list
-			Obstacle or obstacles list.
+		obstacles : pygame.Rect
+			Rectangle obstacle.
 
 		Returns
 		-------
 		bool
 		"""
 		for obstacle in obstacles:
-			if obstacle.collidepoint(point):
+			if obstacle.colliderect(point):
 				return False
 
 		return True
@@ -71,15 +73,22 @@ class Graph():
 
 		Parameters
 		----------
-		obstacles : list
-			Obstacle or obstacles list.
+		None
 
 		Returns
 		-------
-		tuple
-			Coordinates of the random node. 
+		pygame.Rect
+			Rectangle of the random node. 
 		"""
-		self.x_rand = random.uniform(0, self.WIDTH), random.uniform(0, self.HEIGHT)
+		x, y = random.uniform(0, self.WIDTH), random.uniform(0, self.HEIGHT)
+		x_rand = int(x), int(y) # To use within the class
+
+		# Rectangle generated around the generated random node
+		left = x_rand[0] - self.robot_radius
+		top = x_rand[1] - self.robot_radius
+		width = 2*self.robot_radius
+		height = width
+		self.x_rand = pygame.Rect(left, top, width, height)
 
 		return self.x_rand
 
@@ -98,7 +107,7 @@ class Graph():
 		float
 			Euclidean distance metric.
 		"""
-		return  math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2) 
+		return int(math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2))
 
 	def nearest_neighbor(self, tree, x_rand):
 		"""Returns the index of the nearest neighbor.
@@ -121,7 +130,7 @@ class Graph():
 		distances = []
 
 		for state in tree:
-			distance = self.euclidean_distance(state, x_rand)
+			distance = self.euclidean_distance(state, x_rand.center)
 			distances.append(distance)
 			
 		# Index of the minimum distance to the generated random node
@@ -158,18 +167,32 @@ class Graph():
 				self.is_goal_reached = True
 				self.goal_configuration = self.number_of_nodes
 
+			# Rectangle generated around the generated new node
+			left = x_rand[0] - self.robot_radius
+			top = x_rand[1] - self.robot_radius
+			width = 2*self.robot_radius
+			height = width
+			self.x_rand = pygame.Rect(left, top, width, height)
+
 			# Keep that shortest distance from x_near to x_rand
-			return x_rand
+			return self.x_rand
 		else:
 			px, py = x_rand[0] - x_near[0], x_rand[1] - x_near[1]
 			theta = math.atan2(py, px)
-			x_new = x_near[0] + self.EPSILON*math.cos(theta), x_near[1] + self.EPSILON*math.sin(theta) 
+			x_new = x_near[0] + self.EPSILON*math.cos(theta), x_near[1] + self.EPSILON*math.sin(theta)
 
 			if abs(x_new[0] - x_goal[0]) < self.EPSILON and abs(x_new[1] - x_goal[1]) < self.EPSILON: # Check if goal is reached
 				self.is_goal_reached = True
 				self.goal_configuration = self.number_of_nodes
 
-			return x_new
+			# Rectangle around the generated new node
+			left = x_new[0] - self.robot_radius
+			top = x_new[1] - self.robot_radius
+			width = 2*self.robot_radius
+			height = width
+			self.x_new = pygame.Rect(left, top, width, height)
+
+			return self.x_new
 
 	def generate_parents(self, values, parent):
 		"""Generates a list of parents and their children.
@@ -193,6 +216,7 @@ class Graph():
 		"""
 		parent_value = values[self.min_distance] # Value nearest node
 		parent_index = len(parent) # Used to be the index of the parent list
+		# print(parent_value)
 		parent.insert(parent_index, parent_value)
 
 		if self.is_goal_reached:
@@ -252,19 +276,26 @@ class Graph():
 
 	def draw_random_node(self, map_):
 		"""Draws the x_rand node."""
-		pygame.draw.circle(surface=map_, color=self.GREEN, center=self.x_rand, radius=self.robot_radius)
+		pygame.draw.circle(surface=map_, color=self.GREEN, center=self.x_rand.center, 
+			radius=self.robot_radius, width=0)
 
-	def draw_new_node(self, map_, n):
+	def draw_new_node(self, map_, x_new):
 		"""Draws the x_near node."""
-		pygame.draw.circle(surface=map_, color=self.BROWN, center=n, radius=self.robot_radius)
+		if type(x_new) is not tuple:
+			x_new = x_new.center
+
+		pygame.draw.circle(surface=map_, color=self.BROWN, center=x_new,
+			radius=self.robot_radius, width=0)
 
 	def draw_initial_node(self, map_):
 		"""Draws the x_init node."""
-		pygame.draw.circle(surface=map_, color=self.BLUE, center=self.x_init, radius=self.robot_radius)
+		return pygame.draw.circle(surface=map_, color=self.BLUE, center=self.x_init, 
+			radius=self.robot_radius)
 
 	def draw_goal_node(self, map_):
 		"""Draws the x_goal node."""
-		pygame.draw.circle(surface=map_, color=self.RED, center=self.x_goal, radius=self.robot_radius)
+		return pygame.draw.circle(surface=map_, color=self.RED, center=self.x_goal, 
+			radius=self.robot_radius)
 
 	def draw_local_planner(self, p1, p2, map_):
 		"""Draws the local planner from node to node."""
