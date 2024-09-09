@@ -139,6 +139,18 @@ class Graph():
 
 		return x_near
 
+	def nearest_neighbors(self, tree, x_new, radius):
+		neighbors = []
+		distances = []
+
+		for node in tree:
+			distance = self.euclidean_distance(node, x_new)
+			distances.append(distance)
+			if distance <= radius:
+				neighbors.append(node)
+
+		return neighbors
+
 	def new_state(self, x_rand, x_near, x_goal):
 		"""Advances a small step (self.EPSILON) towards the random node.
 		
@@ -216,7 +228,6 @@ class Graph():
 		"""
 		parent_value = values[self.min_distance] # Value nearest node
 		parent_index = len(parent) # Used to be the index of the parent list
-		# print(parent_value)
 		parent.insert(parent_index, parent_value)
 
 		if self.is_goal_reached:
@@ -273,6 +284,69 @@ class Graph():
 			self.path_coordinates.append((x, y))
 
 		return self.path_coordinates
+
+	def find_best_neighbor_and_shortest_path(self, tree, parents, nearest_neighbors, x_rand):
+	    """Finds the best neighbor and the shortest path to the start node.
+
+	    Searches through the nearest neighbors of x_rand, selects the one that minimizes
+	    the cost to reach the start node, and returns the shortest path through that neighbor.
+
+	    Parameters
+	    ----------
+	    tree : list
+	        List of nodes in the tree.
+	    parents : list
+	        List of parent indices for each node in the tree.
+	    nearest_neighbors : list
+	        List of nodes that are near x_rand.
+	    x_rand : tuple
+	        The random node for which we are finding the best connection.
+	    distance_function : function
+	        Function to compute the distance between two nodes.
+
+	    Returns
+	    -------
+	    best_neighbor : tuple
+	        The node in nearest_neighbors that minimizes the cost to reach x_rand.
+	    best_cost : float
+	        The minimum cost to reach x_rand via best_neighbor.
+	    shortest_path : list
+	        The shortest path (list of nodes) from the start node to x_rand.
+	    """
+
+	    best_neighbor = None
+	    best_cost = float('inf')
+	    shortest_path = []
+	    
+	    for neighbor in nearest_neighbors:
+	        neighbor_index = tree.index(neighbor)
+	        
+	        # Compute cost from the start to this neighbor
+	        cost_to_neighbor = 0
+	        current_index = neighbor_index
+	        path_to_neighbor = []
+	        
+	        while current_index != 0:
+	            parent_index = parents[current_index]
+	            cost_to_neighbor += self.euclidean_distance(tree[current_index], tree[parent_index])
+	            path_to_neighbor.append(tree[current_index])
+	            current_index = parent_index
+	        
+	        path_to_neighbor.append(tree[0])  # Add the start node to the path
+
+	        # Reverse to get the correct order (from start to neighbor)
+	        path_to_neighbor.reverse()
+
+	        # Add cost from neighbor to x_rand
+	        total_cost = cost_to_neighbor + self.euclidean_distance(neighbor, x_rand)
+
+	        # Check if this is the best (minimum) cost
+	        if total_cost < best_cost:
+	            best_cost = total_cost
+	            best_neighbor = neighbor
+	            shortest_path = path_to_neighbor + [x_rand]
+
+	    return best_neighbor, best_cost, shortest_path
 
 	def draw_random_node(self, map_):
 		"""Draws the x_rand node."""

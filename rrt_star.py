@@ -57,14 +57,27 @@ def main():
 		rand_collision_free = graph_.is_free(point=x_rand, obstacles=obstacles)
 	
 		if rand_collision_free:
-			x_near = graph_.nearest_neighbor(tree, x_rand) # Nearest neighbor to the random node
-			
-			nears.append(x_near) # Append nearest neighbor of x_new
-			graph_.draw_random_node(map_=environment_.map)
+			# Find nearest neighbors around the nearest node
+			nearest_neighbors = graph_.nearest_neighbors(tree, x_rand, 40)
 
-			graph_.number_of_nodes = len(tree)
-			node_value += 1 # Increment the value for the next randomly generated node
+			# Ensure that there exists a node of the tree around the random sampled node
+			if len(nearest_neighbors) >= 1:
+				best_neighbor, best_cost, shortest_path = graph_.find_best_neighbor_and_shortest_path(
+				        tree, parent, nearest_neighbors, x_rand)
 
+
+				for i in range(len(shortest_path)-1):
+					graph_.draw_local_planner(p1=shortest_path[i].center, p2=shortest_path[i+1].center, map_=environment_.map)
+				
+				tree.append(x_rand)
+
+				# Add the best_neighbor as the parent of x_rand
+				parent.append(tree.index(best_neighbor))
+
+				graph_.number_of_nodes = len(tree)
+				node_value += 1 # Increment the value for the next randomly generated node
+				pygame.display.update()
+				
 		pygame.display.update()
 	pygame.quit()
 	sys.exit()
