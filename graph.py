@@ -327,10 +327,14 @@ class Graph():
 	        path_to_neighbor = []
 	        
 	        while current_index != 0:
-	            parent_index = parents[current_index]
-	            cost_to_neighbor += self.euclidean_distance(tree[current_index], tree[parent_index])
-	            path_to_neighbor.append(tree[current_index])
-	            current_index = parent_index
+	        	parent_index = parents[current_index]
+	        	# Break if a node points to itself, preventing infinite loops
+	        	if current_index == parent_index:
+	        		return None, None, None
+
+	        	cost_to_neighbor += self.euclidean_distance(tree[current_index], tree[parent_index])
+	        	path_to_neighbor.append(tree[current_index])
+	        	current_index = parent_index
 	        
 	        path_to_neighbor.append(tree[0])  # Add the start node to the path
 
@@ -347,6 +351,82 @@ class Graph():
 	            shortest_path = path_to_neighbor + [x_rand]
 
 	    return best_neighbor, best_cost, shortest_path
+
+	def find_shortest_path_to_start(self, tree, parents, start_index, node_index):
+	    """
+	    Finds the shortest path from a specific node to the start node in the tree.
+
+	    This function traces back from the specified node to the start node using
+	    the parent links stored in the parents list, thereby constructing the
+	    shortest path to the start node.
+
+	    Parameters
+	    ----------
+	    tree : list
+	        List of nodes in the tree.
+	    parents : list
+	        List of parent indices for each node in the tree.
+	    start_index : int
+	        Index of the start node in the tree.
+	    node_index : int
+	        Index of the target node from which the path to the start node is found.
+
+	    Returns
+	    -------
+	    shortest_path : list
+	        List of nodes representing the shortest path from the start node
+	        to the specified node.
+	    """
+
+	    path = []
+	    visited = set()  # To avoid cycles
+
+	    current_index = node_index
+	    while current_index != start_index:
+	        # Add the current node to the path and mark it as visited
+	        path.append(tree[current_index])
+	        visited.add(current_index)
+
+	        # Move to the parent of the current node
+	        current_index = parents[current_index]
+
+	        # Check for a cycle
+	        if current_index in visited:
+	            return []  # Return an empty path if a cycle is found
+
+	        # If index goes out of bounds or points to itself, break
+	        if current_index >= len(tree) or parents[current_index] == current_index:
+	            return []
+
+	    # Append the start node at the end of the path
+	    path.append(tree[start_index])
+	    path.reverse()  # Reverse to get the path from start to node
+	    return path
+
+	def compute_cost_to_start(self, tree, parents, node_index):
+	    """
+	    Computes the cost (distance) from the start node to a specified node.
+
+	    Parameters
+	    ----------
+	    tree : list
+	        List of nodes in the tree.
+	    parents : list
+	        List of parent indices for each node in the tree.
+	    node_index : int
+	        The index of the target node.
+
+	    Returns
+	    -------
+	    cost : float
+	        The total cost to reach the target node from the start.
+	    """
+	    cost = 0
+	    current_index = node_index
+	    while parents[current_index] != current_index:
+	        cost += self.euclidean_distance(tree[current_index].center, tree[parents[current_index]].center)
+	        current_index = parents[current_index]
+	    return cost
 
 	def draw_random_node(self, map_):
 		"""Draws the x_rand node."""
@@ -371,9 +451,9 @@ class Graph():
 		return pygame.draw.circle(surface=map_, color=self.RED, center=self.x_goal, 
 			radius=self.robot_radius)
 
-	def draw_local_planner(self, p1, p2, map_):
+	def draw_local_planner(self, p1, p2, map_, color):
 		"""Draws the local planner from node to node."""
-		pygame.draw.line(surface=map_, color=self.BLACK, start_pos=p1, end_pos=p2)
+		pygame.draw.line(surface=map_, color=color, start_pos=p1, end_pos=p2)
 
 	def draw_path_to_goal(self, map_):
 		"""Draws the path from the x_goal node to the x_init node."""
@@ -381,14 +461,38 @@ class Graph():
 			pygame.draw.line(surface=map_, color=self.RED, start_pos=self.path_coordinates[i],
 			 	end_pos=self.path_coordinates[i+1], width=4)
 
+	def draw_shortest_neighbor_path(self, path, map_, color):
+		"""Draws the shortest path found given a neighborhood around a node."""
+		for i in range(len(path)-1):
+			self.draw_local_planner(p1=path[i].center, p2=path[i+1].center, map_=map_, color=color)
+
 	def move_robot(self, position, map_):
 		"""Draws the robot moving at the given position."""
 		pygame.draw.circle(surface=map_, color=(0, 0, 255),	center=position, radius=self.robot_radius)
 
-	def draw_tree(self, nears, news, map_):
-		"""Draws the tree constantly. Used to display it in an infinite loop."""
-		for i in range(len(nears)):
-			self.draw_local_planner(p1=nears[i], p2=news[i+1], map_=map_)
+	def draw_tree(self, tree, parent, environment):
+	    """Draws the entire tree to avoid issues with edge erasing."""
+	    
+	    # Clear the map
+	    environment.map.fill(environment.WHITE)
+
+	    # Draw initial and goal nodes
+	    self.draw_initial_node(environment.map)
+	    self.draw_goal_node(environment.map)
+
+	    # Draw obstacles again
+	    environment.draw_obstacles()
+
+	    # Draw all nodes and edges
+	    for i in range(1, len(tree)):
+	        node = tree[i]
+	        parent_node = tree[parent[i]]
+	        self.draw_local_planner(
+	            p1=parent_node.center, 
+	            p2=node.center, 
+	            map_=environment.map, 
+	            color=self.BLACK
+	        )
 
 	def draw_trajectory(self, nears, news, environment, obstacles, keep_tree):
 		"""Draws the robot moving in the map."""
