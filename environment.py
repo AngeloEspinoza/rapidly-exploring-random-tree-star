@@ -26,7 +26,7 @@ class Environment():
 
 		# Window settings
 		self.FPS = 60
-		pygame.display.set_caption('Visibility-based PRM')
+		pygame.display.set_caption('RRT*')
 		self.map = pygame.display.set_mode(size=(self.WIDTH, self.HEIGHT))
 		self.map.fill(self.WHITE)
 
@@ -42,8 +42,8 @@ class Environment():
 		Parameters
 		----------
 		initial_point : tuple
-			X and Y coordinates, starting from the top-left most part where
-			the obstacle will be placed.
+			X and Y coordinates, starting from the top-left most part
+			where the obstacle will be placed.
 		
 		Returns
 		-------
@@ -67,8 +67,8 @@ class Environment():
 		Parameters
 		----------
 		initial_point : tuple
-			X and Y coordinates, starting from the top-left most part where
-			the obstacle will be placed.
+			X and Y coordinates, starting from the top-left most part
+			where the obstacle will be placed.
 		
 		Returns
 		-------
