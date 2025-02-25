@@ -83,7 +83,7 @@ class Graph():
 		x, y = random.uniform(0, self.WIDTH), random.uniform(0, self.HEIGHT)
 		x_rand = int(x), int(y) # To use within the class
 
-		# Rectangle generated around the generated random node
+		# Rectangle generated around the random node
 		left = x_rand[0] - self.robot_radius
 		top = x_rand[1] - self.robot_radius
 		width = 2*self.robot_radius
@@ -107,6 +107,13 @@ class Graph():
 		float
 			Euclidean distance metric.
 		"""
+		if not isinstance(p1, tuple):
+			p1 = p1.center
+
+		if not isinstance(p2, tuple):
+			p2 = p2.center
+
+
 		return int(math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2))
 
 	def nearest_neighbor(self, tree, x_rand):
@@ -485,7 +492,7 @@ class Graph():
 		return pygame.draw.circle(surface=map_,
 		                          color=self.RED,
 		                          center=self.x_goal,
-			radius=self.robot_radius)
+		                          radius=self.robot_radius)
 
 	def draw_local_planner(self, p1, p2, map_, color):
 		"""Draws the local planner from node to node."""
@@ -520,7 +527,7 @@ class Graph():
 		                   center=position,
 		                   radius=self.robot_radius)
 
-	def draw_tree(self, tree, parent, environment):
+	def draw_tree(self, tree, parent, environment, should_draw_obstacles):
 	    """Draws the entire tree to avoid issues with edge erasing."""
 	    
 	    # Clear the map
@@ -531,7 +538,8 @@ class Graph():
 	    self.draw_goal_node(environment.map)
 
 	    # Draw obstacles again
-	    environment.draw_obstacles()
+	    if should_draw_obstacles:
+		    environment.draw_obstacles()
 
 	    # Draw all nodes and edges
 	    for i in range(1, len(tree)):
