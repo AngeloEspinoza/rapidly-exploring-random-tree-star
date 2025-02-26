@@ -303,7 +303,7 @@ class Graph():
 		return self.path_coordinates
 
 	def find_best_neighbor_and_shortest_path(self, tree, parents, 
-	                                         nearest_neighbors, x_rand):
+	                                         nearest_neighbors, x_new):
 	    """Finds the best neighbor and the shortest path to 
 	    the start node.
 
@@ -319,8 +319,8 @@ class Graph():
 	        List of parent indices for each node in the tree.
 	    nearest_neighbors : list
 	        List of nodes that are near x_rand.
-	    x_rand : tuple
-	        The random node for which we are finding the best
+	    x_new : tuple
+	        The new node for which we are finding the best
 	        connection.
 	    distance_function : function
 	        Function to compute the distance between two nodes.
@@ -329,12 +329,12 @@ class Graph():
 	    -------
 	    best_neighbor : tuple
 	        The node in nearest_neighbors that minimizes the cost to
-	        reach x_rand.
+	        reach x_new.
 	    best_cost : float
-	        The minimum cost to reach x_rand via best_neighbor.
+	        The minimum cost to reach x_new via best_neighbor.
 	    shortest_path : list
 	        The shortest path (list of nodes) from the start node
-	        to x_rand.
+	        to x_new.
 	    """
 
 	    best_neighbor = None
@@ -368,15 +368,15 @@ class Graph():
 	        # Reverse to get the correct order (from start to neighbor)
 	        path_to_neighbor.reverse()
 
-	        # Add cost from neighbor to x_rand
+	        # Add cost from neighbor to x_new
 	        total_cost = (cost_to_neighbor
-	                      + self.euclidean_distance(p1=neighbor, p2=x_rand))
+	                      + self.euclidean_distance(p1=neighbor, p2=x_new))
 
 	        # Check if this is the best (minimum) cost
 	        if total_cost < best_cost:
 	            best_cost = total_cost
 	            best_neighbor = neighbor
-	            shortest_path = path_to_neighbor + [x_rand]
+	            shortest_path = path_to_neighbor + [x_new]
 
 	    return best_neighbor, best_cost, shortest_path
 
@@ -478,14 +478,15 @@ class Graph():
 		pygame.draw.circle(surface=map_,
 		                   color=self.BROWN,
 		                   center=x_new,
-		                   radius=self.robot_radius, width=0)
+		                   radius=self.robot_radius,
+		                   width=0)
 
 	def draw_initial_node(self, map_):
 		"""Draws the x_init node."""
 		return pygame.draw.circle(surface=map_,
 		                          color=self.BLUE,
 		                          center=self.x_init,
-			radius=self.robot_radius)
+		                          radius=self.robot_radius)
 
 	def draw_goal_node(self, map_):
 		"""Draws the x_goal node."""

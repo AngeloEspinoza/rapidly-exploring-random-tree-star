@@ -21,8 +21,43 @@ parser.add_argument('-n',
                     required=False,
                     default=5000,
 					help='Maximum number of nodes')
-
-
+parser.add_argument('-e',
+                    '--epsilon',
+                    type=float,
+                    metavar='',
+                    required=False,
+                    default=20.0,
+                    help='Step size')
+parser.add_argument('-init',
+                    '--x_init',
+                    nargs='+',
+                    type=int,
+                    metavar='',
+                    required=False,
+                    default=(50, 50),
+                    help='Initial node position in X and Y, respectively')
+parser.add_argument('-goal',
+                    '--x_goal',
+                    nargs='+',
+                    type=int,
+                    metavar='',
+                    required=False,
+                    default=(540, 380),
+                    help='Goal node position in X and Y, respectively')
+parser.add_argument('-srn',
+                    '--show_random_nodes',
+                    type=bool,
+                    action=argparse.BooleanOptionalAction,
+                    metavar='',
+                    required=False,
+                    help='Show random nodes on screen')
+parser.add_argument('-snn',
+                    '--show_new_nodes',
+                    type=bool,
+                    action=argparse.BooleanOptionalAction,
+                    metavar='',
+                    required=False,
+                    help='Show new nodes on screen')
 args = parser.parse_args()
 
 # Initialization 
@@ -32,15 +67,15 @@ pygame.init()
 MAP_DIMENSIONS = 640, 480
 
 # Initial and final position of the robot
-x_init = (50, 50)
-x_goal = (540, 380)
+x_init = args.x_init
+x_goal = args.x_goal	
 
 # Instantiating the environment and the graph
 environment_ = environment.Environment(map_dimensions=MAP_DIMENSIONS)
 graph_ = graph.Graph(start=x_init,
                      goal=x_goal,
                      map_dimensions=MAP_DIMENSIONS,
-                     epsilon=20.0,
+                     epsilon=args.epsilon,
                      radius=8)
 
 def main():
@@ -78,6 +113,8 @@ def main():
 			if rand_collision_free:
 				x_near = graph_.nearest_neighbor(tree, x_rand)
 				x_new = graph_.new_state(x_rand, x_near, x_goal)
+				# graph_.draw_new_node(map_= environment_.map, x_new=x_new)
+				# graph_.draw_random_node(map_=environment_.map)
 
 				new_collision_free = graph_.is_free(point=x_new,
 				                                    obstacles=obstacles)
@@ -89,19 +126,25 @@ def main():
 					                                             radius=40)
 
 					# Ensure that there exists a node of the tree around
-					# the random sampled node
+					# the newest node
 					if len(nearest_neighbors) >= 1:	
 						best_neighbor, best_cost, shortest_path = (
 							graph_.find_best_neighbor_and_shortest_path(
 		                        tree=tree,
 		                        parents=parent,
 		                        nearest_neighbors=nearest_neighbors,
-		                        x_rand=x_new
+		                        x_new=x_new
 							)	
 						)
 
 						if best_neighbor == None:
 							continue
+
+						if args.show_random_nodes:
+							graph_.draw_random_node(map_=environment_.map)		
+						if args.show_new_nodes:
+							graph_.draw_new_node(map_=environment_.map,
+							                     x_new=x_new)
 
 						# Draw the random node shortest path to goal
 						graph_.draw_shortest_neighbor_path(
@@ -110,7 +153,7 @@ def main():
 							color=graph_.BLACK)
 						tree.append(x_new)
 
-						# Add the best_neighbor as the parent of x_rand
+						# Add the best_neighbor as the parent of x_new
 						parent.append(tree.index(best_neighbor))
 
 						# Check and potentially update connections for 
@@ -122,7 +165,7 @@ def main():
 								parents=parent,
 								node_index=neighbor_index)
 
-							# Calculate new cost if x_rand is set as 
+							# Calculate new cost if x_new is set as 
 							# the parent
 							new_cost = (best_cost
 							            + graph_.euclidean_distance(
