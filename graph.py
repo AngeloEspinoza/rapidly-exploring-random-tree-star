@@ -185,6 +185,7 @@ class Graph():
 			# Check if goal is reached
 			if (abs(x_rand[0] - x_goal[0]) < self.EPSILON and 
 				abs(x_rand[1] - x_goal[1]) < self.EPSILON): 
+
 				self.is_goal_reached = True
 				self.goal_configuration = self.number_of_nodes
 
@@ -307,7 +308,7 @@ class Graph():
 	    """Finds the best neighbor and the shortest path to 
 	    the start node.
 
-	    Searches through the nearest neighbors of x_rand, selects the
+	    Searches through the nearest neighbors of x_new, selects the
 	    one that minimizes the cost to reach the start node, and
 	    returns the shortest path through that neighbor.
 
@@ -336,7 +337,6 @@ class Graph():
 	        The shortest path (list of nodes) from the start node
 	        to x_new.
 	    """
-
 	    best_neighbor = None
 	    best_cost = float('inf')
 	    shortest_path = []
@@ -468,7 +468,8 @@ class Graph():
 		pygame.draw.circle(surface=map_,
 		                   color=self.GREEN,
 		                   center=self.x_rand.center,
-		                   radius=self.robot_radius, width=0)
+		                   radius=self.robot_radius,
+		                   width=0)
 
 	def draw_new_node(self, map_, x_new):
 		"""Draws the x_near node."""
@@ -495,12 +496,13 @@ class Graph():
 		                          center=self.x_goal,
 		                          radius=self.robot_radius)
 
-	def draw_local_planner(self, p1, p2, map_, color):
+	def draw_local_planner(self, p1, p2, map_, color, width=1):
 		"""Draws the local planner from node to node."""
 		pygame.draw.line(surface=map_,
 		                 color=color,
 		                 start_pos=p1,
-		                 end_pos=p2)
+		                 end_pos=p2,
+		                 width=width)
 
 	def draw_path_to_goal(self, map_):
 		"""Draws the path from the x_goal node to the x_init node."""
@@ -510,7 +512,7 @@ class Graph():
 			                 start_pos=self.path_coordinates[i],
 			                 end_pos=self.path_coordinates[i+1], width=4)
 
-	def draw_shortest_neighbor_path(self, path, map_, color):
+	def draw_shortest_neighbor_path(self, path, map_, color, width=1):
 		"""Draws the shortest path found given a neighborhood
 		around a node.
 
@@ -519,7 +521,8 @@ class Graph():
 			self.draw_local_planner(p1=path[i].center,
 			                        p2=path[i+1].center,
 			                        map_=map_,
-			                        color=color)
+			                        color=color,
+			                        width=width)
 
 	def move_robot(self, position, map_):
 		"""Draws the robot moving at the given position."""
@@ -528,7 +531,8 @@ class Graph():
 		                   center=position,
 		                   radius=self.robot_radius)
 
-	def draw_tree(self, tree, parent, environment, should_draw_obstacles):
+	def draw_tree(self, tree, parent, environment,
+	              should_draw_obstacles, goal_shortest_path):
 	    """Draws the entire tree to avoid issues with edge erasing."""
 	    
 	    # Clear the map
@@ -547,11 +551,17 @@ class Graph():
 	        node = tree[i]
 	        parent_node = tree[parent[i]]
 	        self.draw_local_planner(
-	            p1=parent_node.center, 
-	            p2=node.center, 
-	            map_=environment.map, 
+	            p1=parent_node.center,
+	            p2=node.center,
+	            map_=environment.map,
 	            color=self.BLACK
 	        )
+
+	    if self.is_goal_reached:
+		    self.draw_shortest_neighbor_path(path=goal_shortest_path,
+			                                 map_=environment.map,
+			                                 color=self.RED,
+			                                 width=4)
 
 	def draw_trajectory(self, nears, news, environment,
 	                    obstacles, keep_tree):

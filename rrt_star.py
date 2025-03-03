@@ -95,6 +95,8 @@ def main():
 	obstacles = environment_.draw_obstacles() if args.obstacles else []
 	graph_.obstacles = obstacles
 	nodes_counter = 0
+	keep_tree = False
+	goal_shortest_path = []
 
 	while run:
 		# Make sure the loop runs at 60 FPS
@@ -103,7 +105,7 @@ def main():
 			if event.type == pygame.QUIT:
 				run = False
 
-		if nodes_counter <= args.nodes:
+		if nodes_counter <= args.nodes and not keep_tree:
 			# Sample free space and check x_rand node collision
 			x_rand = graph_.generate_random_node()	
 			rand_collision_free = graph_.is_free(point=x_rand,
@@ -118,15 +120,16 @@ def main():
 
 				if new_collision_free:
 					# Find nearest neighbors around the new node
-					nearest_neighbors = graph_.nearest_neighbors(tree=tree,
-					                                             x_new=x_new,
-					                                             radius=40)
+					new_neighbors = graph_.nearest_neighbors(tree=tree,
+					                                         x_new=x_new,
+					                                         radius=40)
+
 
 					best_neighbor, best_cost, shortest_path = (
 						graph_.find_best_neighbor_and_shortest_path(
 	                        tree=tree,
 	                        parents=parent,
-	                        nearest_neighbors=nearest_neighbors,
+	                        nearest_neighbors=new_neighbors,
 	                        x_new=x_new
 						)	
 					)
@@ -146,6 +149,28 @@ def main():
 						path=shortest_path,
 						map_=environment_.map,
 						color=graph_.BLACK)
+
+					if graph_.is_goal_reached:
+						# Nearest neighbors around x_goal
+						goal_neighbors = graph_.nearest_neighbors(tree=tree,
+						                                          x_new=goal,
+						                                          radius=40)
+
+						_, _, goal_shortest_path = (
+							graph_.find_best_neighbor_and_shortest_path(
+	                        tree=tree,
+	                        parents=parent,
+	                        nearest_neighbors=goal_neighbors,
+	                        x_new=goal
+	                        )
+	                    )
+
+						graph_.draw_shortest_neighbor_path(
+							path=goal_shortest_path,
+			                map_=environment_.map,
+			                color=graph_.RED,
+			                width=4)
+
 					tree.append(x_new)
 
 					# Add the best_neighbor as the parent of x_new
@@ -153,7 +178,7 @@ def main():
 
 					# Check and potentially update connections for 
 					# each neighbor
-					for neighbor in nearest_neighbors:
+					for neighbor in new_neighbors:
 						neighbor_index = tree.index(neighbor)
 						current_cost = graph_.compute_cost_to_start(
 							tree=tree,
@@ -189,7 +214,8 @@ def main():
 								tree=tree,
 								parent=parent,
 								environment=environment_,
-								should_draw_obstacles=args.obstacles)
+								should_draw_obstacles=args.obstacles,
+								goal_shortest_path=goal_shortest_path)
 
 							# Draw the new connection
 							graph_.draw_local_planner(
