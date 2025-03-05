@@ -58,6 +58,30 @@ parser.add_argument('-snn',
                     metavar='',
                     required=False,
                     help='Show new nodes on screen')
+parser.add_argument('-ptg',
+                    '--path_to_goal',
+                    type=bool,
+                    action=argparse.BooleanOptionalAction,
+                    metavar='',
+                    required=False,
+                    help='Draws a red line indicating the path to goal')
+parser.add_argument('-mr',
+                    '--move_robot',
+                    type=bool,
+                    action=argparse.BooleanOptionalAction,
+                    metavar='',
+                    required=False,
+                    help='Shows the movements of the robot from the start \
+                    to the end')
+parser.add_argument('-kt',
+                    '--keep_tree',
+                    type=bool,
+                    action=argparse.BooleanOptionalAction,
+                    metavar='',
+                    required=False,
+                    default=True,
+                    help='Keeps the tree while the robot is moving towards \
+                    the goal')
 args = parser.parse_args()
 
 # Initialization 
@@ -97,6 +121,7 @@ def main():
 	nodes_counter = 0
 	keep_tree = False
 	goal_shortest_path = []
+	is_simulation_finished = False
 
 	while run:
 		# Make sure the loop runs at 60 FPS
@@ -164,12 +189,20 @@ def main():
 	                        x_new=goal
 	                        )
 	                    )
+						# print([i.center for i in goal_shortest_path])
 
-						graph_.draw_shortest_neighbor_path(
-							path=goal_shortest_path,
-			                map_=environment_.map,
-			                color=graph_.RED,
-			                width=4)
+						if args.path_to_goal:
+							graph_.draw_shortest_neighbor_path(
+								path=goal_shortest_path,
+				                map_=environment_.map,
+				                color=graph_.RED,
+				                width=4)
+						else:
+							graph_.draw_shortest_neighbor_path(
+								path=goal_shortest_path,
+				                map_=environment_.map,
+				                color=graph_.BLACK)
+
 
 					tree.append(x_new)
 
@@ -215,7 +248,8 @@ def main():
 								parent=parent,
 								environment=environment_,
 								should_draw_obstacles=args.obstacles,
-								goal_shortest_path=goal_shortest_path)
+								goal_shortest_path=goal_shortest_path,
+								path_to_goal=args.path_to_goal)
 
 							# Draw the new connection
 							graph_.draw_local_planner(
@@ -240,6 +274,15 @@ def main():
 						graph_.number_of_nodes = len(tree)
 									
 			pygame.display.update()
+
+		else:
+			if graph_.is_goal_reached and args.move_robot:	
+				graph_.draw_trajectory(environment=environment_,
+			                       	   obstacles=True,
+			                       	   keep_tree=args.keep_tree,	
+			                       	   path=goal_shortest_path,
+			                       	   tree=tree,
+			                       	   parent=parent)
 	pygame.quit()
 	sys.exit()
 

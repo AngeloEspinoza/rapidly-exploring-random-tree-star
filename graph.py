@@ -532,7 +532,8 @@ class Graph():
 		                   radius=self.robot_radius)
 
 	def draw_tree(self, tree, parent, environment,
-	              should_draw_obstacles, goal_shortest_path):
+	              should_draw_obstacles, goal_shortest_path,
+	              path_to_goal):
 	    """Draws the entire tree to avoid issues with edge erasing."""
 	    
 	    # Clear the map
@@ -550,40 +551,72 @@ class Graph():
 	    for i in range(1, len(tree)):
 	        node = tree[i]
 	        parent_node = tree[parent[i]]
-	        self.draw_local_planner(
-	            p1=parent_node.center,
-	            p2=node.center,
-	            map_=environment.map,
-	            color=self.BLACK
-	        )
+	        self.draw_local_planner(p1=parent_node.center,
+	                                p2=node.center,
+	                                map_=environment.map,
+	                                color=self.BLACK)
 
-	    if self.is_goal_reached:
+	    if self.is_goal_reached and path_to_goal:
 		    self.draw_shortest_neighbor_path(path=goal_shortest_path,
 			                                 map_=environment.map,
 			                                 color=self.RED,
 			                                 width=4)
+	    else:
+	    	self.draw_shortest_neighbor_path(path=goal_shortest_path,
+			                                 map_=environment.map,
+			                                 color=self.BLACK)
 
-	def draw_trajectory(self, nears, news, environment,
-	                    obstacles, keep_tree):
+	def draw_trajectory(self, environment, obstacles, keep_tree,
+	                    path, tree, parent):
 		"""Draws the robot moving in the map."""
-		for i in range(len(self.path_coordinates)-1):
-			robot_position = self.path_coordinates[::-1][i]
+		path_coordinates = [node.center for node in path]
 
-			if obstacles != []:
-				environment.draw_obstacles()
-
+		for robot_position in path_coordinates:
 			# Draw inital and final robot configuration
 			self.draw_initial_node(map_=environment.map)
 			self.draw_goal_node(map_=environment.map)
 
+			if obstacles != []:
+				environment.draw_obstacles()
+
 			# Draw path to goal, and the robot movement
-			self.draw_path_to_goal(map_=environment.map)		
+			self.draw_shortest_neighbor_path(
+								path=path,
+				                map_=environment.map,
+				                color=self.RED,
+				                width=4)
 			self.move_robot(position=robot_position, map_=environment.map)
 
 			if keep_tree:
-				self.draw_tree(nears=nears, news=news, map_=environment.map)				
+				for i in range(1, len(tree)):
+				    node = tree[i]
+				    parent_node = tree[parent[i]]
+				    self.draw_local_planner(p1=parent_node.center,
+				                            p2=node.center,
+				                            map_=environment.map,
+				                            color=self.BLACK)
 
 			# Refresh the screen
 			pygame.display.update()
 			pygame.time.delay(20)
 			environment.map.fill(self.WHITE)
+		
+		# for i in range(len(path)-1):
+		# 	robot_position = path[::-1][i]
+
+		# 	if obstacles != []:
+		# 		environment.draw_obstacles()
+
+		# 	# Draw inital and final robot configuration
+		# 	self.draw_initial_node(map_=environment.map)
+		# 	self.draw_goal_node(map_=environment.map)
+
+		# 	# Draw path to goal, and the robot movement
+		# 	# self.draw_path_to_goal(map_=environment.map)		
+		# 	self.move_robot(position=robot_position, map_=environment.map)
+
+
+		# 	# Refresh the screen
+		# 	pygame.display.update()
+		# 	pygame.time.delay(20)
+		# 	environment.map.fill(self.WHITE)
