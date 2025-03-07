@@ -58,6 +58,13 @@ parser.add_argument('-snn',
                     metavar='',
                     required=False,
                     help='Show new nodes on screen')
+parser.add_argument('-bp',
+                    '--bias_percentage',
+                    type=int,
+                    metavar='',
+                    required=False,
+                    default=30,
+                    help='Amount of bias the RRT from 1 to 100')
 parser.add_argument('-ptg',
                     '--path_to_goal',
                     type=bool,
@@ -121,7 +128,7 @@ def main():
 	nodes_counter = 0
 	keep_tree = False
 	goal_shortest_path = []
-	is_simulation_finished = False
+	bias_percentage = 11 - args.bias_percentage//10
 
 	while run:
 		# Make sure the loop runs at 60 FPS
@@ -136,7 +143,10 @@ def main():
 			rand_collision_free = graph_.is_free(point=x_rand,
 			                                     obstacles=obstacles)
 			nodes_counter += 1
-		
+
+			if nodes_counter%bias_percentage == 0:
+				x_rand = goal
+
 			if rand_collision_free:
 				x_near = graph_.nearest_neighbor(tree, x_rand)
 				x_new = graph_.new_state(x_rand, x_near, x_goal)
@@ -189,19 +199,19 @@ def main():
 	                        x_new=goal
 	                        )
 	                    )
-						# print([i.center for i in goal_shortest_path])
 
-						if args.path_to_goal:
-							graph_.draw_shortest_neighbor_path(
-								path=goal_shortest_path,
-				                map_=environment_.map,
-				                color=graph_.RED,
-				                width=4)
-						else:
-							graph_.draw_shortest_neighbor_path(
-								path=goal_shortest_path,
-				                map_=environment_.map,
-				                color=graph_.BLACK)
+						if goal_shortest_path is not None:
+							if args.path_to_goal:
+								graph_.draw_shortest_neighbor_path(
+									path=goal_shortest_path,
+					                map_=environment_.map,
+					                color=graph_.RED,
+					                width=4)
+							else:
+								graph_.draw_shortest_neighbor_path(
+									path=goal_shortest_path,
+					                map_=environment_.map,
+					                color=graph_.BLACK)
 
 
 					tree.append(x_new)

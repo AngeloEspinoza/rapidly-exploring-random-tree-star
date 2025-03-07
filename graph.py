@@ -555,16 +555,17 @@ class Graph():
 	                                p2=node.center,
 	                                map_=environment.map,
 	                                color=self.BLACK)
-
-	    if self.is_goal_reached and path_to_goal:
-		    self.draw_shortest_neighbor_path(path=goal_shortest_path,
-			                                 map_=environment.map,
-			                                 color=self.RED,
-			                                 width=4)
-	    else:
-	    	self.draw_shortest_neighbor_path(path=goal_shortest_path,
-			                                 map_=environment.map,
-			                                 color=self.BLACK)
+	        
+	    if goal_shortest_path is not None:
+		    if self.is_goal_reached and path_to_goal:
+			    self.draw_shortest_neighbor_path(path=goal_shortest_path,
+				                                 map_=environment.map,
+				                                 color=self.RED,
+				                                 width=4)
+		    else:
+		    	self.draw_shortest_neighbor_path(path=goal_shortest_path,
+				                                 map_=environment.map,
+				                                 color=self.BLACK)
 
 	def draw_trajectory(self, environment, obstacles, keep_tree,
 	                    path, tree, parent):
