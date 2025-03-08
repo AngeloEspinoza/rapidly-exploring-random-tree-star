@@ -1,7 +1,7 @@
 # Optimal Rapidly-exploring Random Tree (RRT*)
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/29a489c4-7b06-414a-831e-ed026626d913" />
+  <img src="https://github.com/user-attachments/assets/564860a4-4a8b-4972-b38a-580dd96322af" />
 </p>
 
 ## Description
